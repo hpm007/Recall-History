@@ -1,0 +1,22 @@
+{
+  "name": "manifestrecall",
+  "version": "1.0.0",
+  "description": "Recall Browser History",
+  "main": "content.js",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "esbuild": "^0.25.12"
+  },
+  "dependencies": {
+    "idb": "^8.0.3",
+    "openai": "^6.8.1",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  }
+}
