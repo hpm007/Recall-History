@@ -1,3 +1,4 @@
+import { isExcludedUrl } from '../options/config_options.js';
 import Readability from '../utils/readability-main/Readability.js';
 
 function convertToStructuredText(node) {
@@ -84,8 +85,12 @@ function extractReadableContent() {
     const reader = new Readability(doc);
     const article = reader.parse();
 
+    const currURL = window.location.href;
     if (!article) {
       console.warn("⚠️ Readability returned null");
+      return null;
+    }
+    if (isExcludedUrl(currURL)){
       return null;
     }
     const cleanDoc = new DOMParser().parseFromString(article.content, "text/html");
@@ -99,7 +104,7 @@ function extractReadableContent() {
 
     return {
       title: article.title,
-      url: window.location.href,
+      url: currURL,
       summary: trimmedText
     };
   } catch (err) {
@@ -110,8 +115,7 @@ function extractReadableContent() {
 
 function sendContent() {
   const data = extractReadableContent();
-  if (data) {
-    if (data.url) {
+  if (data && data.url) {
       match_substr = data.url.match(/^(?:https?\:\/\/)(?:www\.)?(.+)\.(?:[a-z]+)(?=\/)/i);
       data.url = data.url.slice(0, 100)
       domain_name = match_substr ? match_substr[1].replace('.', ' ') : null;
@@ -119,7 +123,6 @@ function sendContent() {
 
       data.summary = data.summary.replace(/\s+/g, ' ').trim();
       chrome.runtime.sendMessage({ action: "save_page_data", data });
-    }
   }
 }
 

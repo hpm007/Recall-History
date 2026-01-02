@@ -1,4 +1,6 @@
 import { getPageByUrl, upsertPage } from "../db_store";
+import { summarizeWithLLM, createEmbedding } from "../summarizer/summarize.js";
+import { isExcludedUrl } from "../options/config_options.js";
 
 // dwell time in milliseconds
 const DWELL_THRESHOLD = 20000;
@@ -6,8 +8,7 @@ const dwellTimers = new Map();
 
 // When the user updates or loads a page
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === "complete" && tab.active && /^https?:/.test(tab.url)) {
-    console.log("🌐 Page loaded:", tab.url);
+  if (changeInfo.status === "complete" && tab.active && tab.url && /^https?:/.test(tab.url) && !isExcludedUrl(tab.url)) {
     startDwellTimer(tabId, tab.url);
   }
 });
@@ -50,12 +51,29 @@ async function handleIncomingPage(data) {
   }
   const existingPage = await getPageByUrl(data.url);
   if (existingPage){
-    console.log("Skipping - page already exists: ", data.url)
+    console.log("Skipping - page already exists: ", data.url);
+    return;
   }
-  let summary;
-  summary = data.summary || "";
-  
-  const pageObj = {url: data.url, title: data.title, summary: summary, timestamp: Date.now()}
+
+  try{
+    data.summary = await summarizeWithLLM(data.summary);
+  }
+  catch(err) {
+    console.error("LLM summary error, failing back to truncated text: ", err);
+    // fallback to short truncated version if LLM summarization fails
+    data.summary = (data.summary || "").slice(0, 600);
+  }
+    
+  console.log(data.summary);
+  let embedding = [];
+
+  try {
+    embedding = await createEmbedding(data.summary);
+  }
+  catch(err) {
+    console.error("Embedding failed with error: ", err)
+  }
+  const pageObj = {url: data.url, title: data.title, summary: data.summary, embedding: embedding, timestamp: Date.now()}
   await upsertPage(pageObj);  // upsert page by url in IndexedDB
 }
 
