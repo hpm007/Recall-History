@@ -117,8 +117,7 @@ function sendContent() {
   const data = extractReadableContent();
   if (data && data.url) {
       match_substr = data.url.match(/^(?:https?\:\/\/)(?:www\.)?(.+)\.(?:[a-z]+)(?=\/)/i);
-      data.url = data.url.slice(0, 100)
-      domain_name = match_substr ? match_substr[1].replace('.', ' ') : null;
+      data.domain = new URL(data.url).hostname;
       data.title = data.title ? data.title : domain_name;
 
       data.summary = data.summary.replace(/\s+/g, ' ').trim();

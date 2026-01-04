@@ -14,7 +14,8 @@ mkdirSync(distDir, { recursive: true });
 await esbuild.build({
   entryPoints: [
     "src/background/background.js",
-    "src/content/content.js"
+    "src/content/content.js",
+    "src/popup/popup.js"
   ],
   bundle: true,
   minify: true,
@@ -24,13 +25,18 @@ await esbuild.build({
   logLevel: "info",
 });
 
-// 3️⃣ Copy static assets
+// 3️⃣ Copy static files
 const staticFiles = ["manifest.json", "src/db_store.js"];
 for (const file of staticFiles) {
   const dest = path.join(distDir, path.basename(file));
   copyFileSync(file, dest);
 }
-
+// copy static folders
+const staticFolders = ["src/popup", "src/options"];
+for (const folder of staticFolders){
+  cpSync(folder, path.join(distDir, folder.split("/")[1]), 
+        {recursive: true, filter: (src) => !src.endsWith(".js")});
+}
 // 4️⃣ Copy icons folder if exists
 if (existsSync("icons")) {
   cpSync("icons", path.join(distDir, "icons"), { recursive: true });

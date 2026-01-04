@@ -73,7 +73,7 @@ async function handleIncomingPage(data) {
   catch(err) {
     console.error("Embedding failed with error: ", err)
   }
-  const pageObj = {url: data.url, title: data.title, summary: data.summary, embedding: embedding, timestamp: Date.now()}
+  const pageObj = {url: data.url, title: data.title, domain: data.domain, summary: data.summary, embedding: embedding, timestamp: Date.now()}
   await upsertPage(pageObj);  // upsert page by url in IndexedDB
 }
 
