@@ -28,15 +28,24 @@ async function runSearch(query){
 
     // rank stored pages
     const num_results = 5;
+    const similarity_threshold = 0.4;
     const storedPages = await getAllPages();
     
-    const rankedPages = storedPages.filter(p => Array.isArray(p.embedding)).map(p => ({page: p, score: similarityScore(embeddedQuery, p.embedding)}))
-                                    .sort((a, b) => b.score - a.score).slice(0, num_results);                                
+    const rankedResults = storedPages.filter(p => Array.isArray(p.embedding)).map(p => ({page: p, score: similarityScore(embeddedQuery, p.embedding)}))
+                                    .filter(res => res.score >= similarity_threshold).sort((a, b) => b.score - a.score).slice(0, num_results);                                
 
-    if (rankedPages){
-      console.log("ranking returned: ", rankedPages)
-    }
-    const groupedPages = groupByDomain(rankedPages);     
+    if (rankedResults.length === 0) {
+      resultsEl.innerHTML = "<div>No matches found</div>";
+      return;
+    }                                      
+    let relResults = rankedResults;                                    
+    if (rankedResults.length > 1){
+      let topScore = rankedResults[0].score;
+      const relCut = 0.5; 
+      relResults = rankedResults.filter(r => r.score >= topScore * relCut);
+    }                                    
+    
+    const groupedPages = groupByDomain(relResults);     
     renderResults(groupedPages);
 }
 
@@ -81,11 +90,6 @@ async function fallbackKeywordSearch(query) {
 
 function renderResults(groupedResults) {
   resultsEl.innerHTML = "";
-
-  if (groupedResults.size === 0) {
-    resultsEl.innerHTML = "<div>No matches found</div>";
-    return;
-  }
 
   for (const [domain, group] of groupedResults.entries()){
     // domain header

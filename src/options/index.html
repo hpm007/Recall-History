@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Domain Exclusions</title>
+
+<style>
+    body { font-family: system-ui; max-width: 520px; margin: auto; padding: 14px; }
+    input { width: 100%; padding: 10px; }
+    .row { display: flex; justify-content: space-between; padding: 20px; border-bottom: 1px solid #eee; }
+    button { padding: 6px 8px; cursor: pointer; transition: transform 0.08s ease, box-shadow 0.08s ease;}
+        .actions{ display: flex; justify-content: center; gap: 8px; margin-top: 10px;}
+        .topButtons{ background-color: #00B017; color: #FFFF;}
+        .del{background-color: #DE392A; color: #FFFF;;}
+
+    button:active {
+        transform: scale(0.96);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+</style>
+</head>
+
+<body>
+
+<h3>Exclude Domains</h3>
+
+<input id="domainInput" placeholder="example.com" />
+<div class="actions">
+    <button class= "topButtons" id="addBtn">Add Domain</button>
+    <button class= "topButtons" id="resetBtn" style="background-color: #00B017; color: #FFFF">Reset to Default List</button>
+</div>
+
+<div id="list"></div>
+
+<script type="module" src="options.js"></script>
+
+</body>
+</html>
