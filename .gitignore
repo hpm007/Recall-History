@@ -1,0 +1,6 @@
+dist/
+dl_content/
+node_modules/
+src/utils/
+src/debug/
+.env

@@ -15,7 +15,8 @@ await esbuild.build({
   entryPoints: [
     "src/background/background.js",
     "src/content/content.js",
-    "src/popup/popup.js"
+    "src/popup/popup.js",
+    "src/options/options.js"
   ],
   bundle: true,
   minify: true,
@@ -32,11 +33,12 @@ for (const file of staticFiles) {
   copyFileSync(file, dest);
 }
 // copy static folders
-const staticFolders = ["src/popup", "src/options"];
+const staticFolders = ["src/popup", "src/options", "src/debug"];
 for (const folder of staticFolders){
   cpSync(folder, path.join(distDir, folder.split("/")[1]), 
-        {recursive: true, filter: (src) => !src.endsWith(".js")});
+  {recursive: true, filter: (src) => !src.endsWith(".js")});
 }
+copyFileSync("src/debug/db.js", "dist/debug/db.js");
 // 4️⃣ Copy icons folder if exists
 if (existsSync("icons")) {
   cpSync("icons", path.join(distDir, "icons"), { recursive: true });

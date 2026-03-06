@@ -79,7 +79,7 @@ function chunkText(text, maxLength = 4000, overlap = 200) {
   return chunks;
 }
 
-function extractReadableContent() {
+async function extractReadableContent() {
   try {
     const doc = document.cloneNode(true);
     const reader = new Readability(doc);
@@ -90,7 +90,7 @@ function extractReadableContent() {
       console.warn("⚠️ Readability returned null");
       return null;
     }
-    if (isExcludedUrl(currURL)){
+    if (await isExcludedUrl(currURL)){
       return null;
     }
     const cleanDoc = new DOMParser().parseFromString(article.content, "text/html");
@@ -113,10 +113,9 @@ function extractReadableContent() {
   }
 }
 
-function sendContent() {
-  const data = extractReadableContent();
+async function sendContent() {
+  const data = await extractReadableContent();
   if (data && data.url) {
-      match_substr = data.url.match(/^(?:https?\:\/\/)(?:www\.)?(.+)\.(?:[a-z]+)(?=\/)/i);
       data.domain = new URL(data.url).hostname;
       data.title = data.title ? data.title : domain_name;
 

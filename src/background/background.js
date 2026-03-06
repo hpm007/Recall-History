@@ -1,16 +1,38 @@
-import { getPageByUrl, upsertPage } from "../db_store";
+import { getPageByUrl, upsertPage } from "../db_store.js";
 import { summarizeWithLLM, createEmbedding } from "../summarizer/summarize.js";
 import { isExcludedUrl } from "../options/config_options.js";
 
 // dwell time in milliseconds
 const DWELL_THRESHOLD = 20000;
 const dwellTimers = new Map();
+const HTTP_URL_RE = /^https?:/i;
+
+function isHttpUrl(url) {
+  return typeof url === "string" && HTTP_URL_RE.test(url);
+}
+
+function clearDwellTimer(tabId) {
+  if (!dwellTimers.has(tabId)) return;
+  clearTimeout(dwellTimers.get(tabId));
+  dwellTimers.delete(tabId);
+}
 
 // When the user updates or loads a page
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === "complete" && tab.active && tab.url && /^https?:/.test(tab.url) && !isExcludedUrl(tab.url)) {
-    startDwellTimer(tabId, tab.url);
+  if (changeInfo.status !== "complete" || !tab?.active) return;
+
+  if (!isHttpUrl(tab.url)) {
+    clearDwellTimer(tabId);
+    return;
   }
+
+  isExcludedUrl(tab.url).then((excluded)=> {
+    if (excluded) {
+      clearDwellTimer(tabId);
+      return;
+    }
+    startDwellTimer(tabId, tab.url);
+  });
 });
 
 // When the user switches to a different tab
@@ -25,11 +47,10 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
   // start timer on the new tab if URL is valid
   chrome.tabs.get(activeInfo.tabId, (tab) => {
-    if (tab && /^https?:/.test(tab.url)) {
-      startDwellTimer(tab.id, tab.url);
-    }
-    else {
-      return;
+    if (tab && isHttpUrl(tab.url)) {
+      isExcludedUrl(tab.url).then((excluded)=> {
+        if (!excluded) startDwellTimer(tab.id, tab.url);
+      });
     }
   });
 });
@@ -47,6 +68,10 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
 async function handleIncomingPage(data) {
   if (!data?.url){
     console.error("❌ Incoming page data missing URL");
+    return;
+  }
+  if (await isExcludedUrl(data.url)) {
+    console.log("Skipping excluded URL:", data.url);
     return;
   }
   const existingPage = await getPageByUrl(data.url);
@@ -94,6 +119,12 @@ function startDwellTimer(tabId, url) {
 
 async function triggerPageCapture(tabId) {
   try {
+    const tab = await chrome.tabs.get(tabId);
+    if (!isHttpUrl(tab?.url)) {
+      console.log("Skipping capture on non-web URL:", tab?.url);
+      return;
+    }
+
     // Ensure content script is injected
     await chrome.scripting.executeScript({
       target: { tabId },

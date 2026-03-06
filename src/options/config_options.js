@@ -1,5 +1,5 @@
-export const EXCLUDED_DOMAINS = [
-    // "mail.google.com",
+export const PRELOADED_DOMAINS = [
+    "mail.google.com",
     "outlook.live.com",
     "outlook.office.com",
     "mail.yahoo.com",
@@ -7,22 +7,17 @@ export const EXCLUDED_DOMAINS = [
     "protonmail.com",
     "fastmail.com",
     "youtube.com",
-    "netflix.com",
-    "primevideo.com",
-    "hotstar.com",
+    // "netflix.com",
     "twitch.tv",
     "vimeo.com",
-    // "drive.google.com",
-    // "docs.google.com",
-    // "sheets.google.com",
-    // "slides.google.com",
     "notion.so",
     "dropbox.com",
     "onedrive.live.com",
     "box.com",
     "icloud.com",
     "chatgpt.com",
-    "google.com",
+    "gemini.google.com",
+    "google.com/search",
     "bing.com",
     "duckduckgo.com",
     "search.yahoo.com",
@@ -42,6 +37,8 @@ export const EXCLUDED_DOMAINS = [
 ];
 
 const PATH_EXCLUDE_KEYWORDS = [
+  "login",
+  "account",
   "privacy",
   "terms",
   "terms-of-service",
@@ -65,36 +62,42 @@ const PATH_EXCLUDE_KEYWORDS = [
   "contact",
   "help",
   "support",
-  "faq",
   "accessibility",
   "settings"
 ];
 
-const TITLE_EXCLUDE_KEYWORDS = [
-  "privacy policy",
-  "cookie policy",
-  "terms of service",
-  "terms & conditions",
-  "legal notice",
-  "gdpr",
-  "disclaimer",
-  "accessibility",
-  "about us",
-  "contact us",
-  "help center",
-  "support",
-  "faq"
-];
+function normalizeExclusion(entry) {
+  return String(entry || "")
+    .replace(/^[*@]*/, "")
+    .replace(/^https?:\/\//, "")
+    .trim()
+    .toLowerCase();
+}
 
+async function getExcluded() {
+  const r = await chrome.storage.local.get("excluded_domains");
+  if (Array.isArray(r.excluded_domains) && r.excluded_domains.length) {
+    return r.excluded_domains.map(normalizeExclusion).filter(Boolean);
+  }
+  return PRELOADED_DOMAINS.map(normalizeExclusion).filter(Boolean);
+}
 
-export function isExcludedUrl(url) {
+export async function isExcludedUrl(url) {
   try {
+    const domains = await getExcluded();
     const { hostname, pathname } = new URL(url);
+    const normalizedHostname = hostname.toLowerCase().replace(/^www\./, "");
 
-    const hasExcDomain = EXCLUDED_DOMAINS.some(domain =>
-      hostname.includes(domain)
-      // (domain.includes("/") && `${hostname}${pathname}`.startsWith(domain))
-    );
+    const hasExcDomain = domains.some((domain) => {
+      const normalizedDomain = domain.replace(/^www\./, "");
+
+      if (normalizedDomain.includes("/")) {
+        return `${normalizedHostname}${pathname}`.startsWith(normalizedDomain);
+      }
+
+      return normalizedHostname === normalizedDomain;
+    });
+    
     let path = pathname.toLowerCase();
     
     const hasExcPath = PATH_EXCLUDE_KEYWORDS.some(keyword => 
@@ -102,7 +105,7 @@ export function isExcludedUrl(url) {
     );
     return hasExcDomain || hasExcPath;
 
-  } catch {
+  } catch (e) {
     return true; // exclude malformed URLs
   }
 };
