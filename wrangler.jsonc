@@ -1,0 +1,61 @@
+{
+	"name": "recall-proxy",
+	"main": "worker.js",
+	"compatibility_date": "2026-01-08",
+	"workers_dev": true,
+	"preview_urls": true,
+	"observability": {
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		},
+		"traces": {
+			"enabled": true
+		}
+	},
+	// default: production
+	"vars": {
+		"ENV": "production"
+	},
+	"routes": [
+		{
+			"pattern": "api.recallhistory.net/*",
+			"zone_name": "recallhistory.net"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "USAGE",
+			"id": "30c1500eb5db493db982a7b7fe2d0b8e"
+		},
+		{
+			"binding": "USERS",
+			"id": "bd3b1fa060824b1ba22aa8a6255f6cfe"
+		}
+	],
+	"env": {
+		"dev": {
+			"name": "recall-proxy-dev",
+			"routes": [
+				{
+					"pattern": "dev-api.recallhistory.net",
+					"zone_name": "recallhistory.net",
+					"custom_domain": true
+				}
+			],
+			"kv_namespaces": [
+				{
+					"binding": "USAGE",
+					"id": "23e08b9d6e0240bc9a3561cfc7c37ba8"
+				},
+				{
+					"binding": "USERS",
+					"id": "fd13075b544a436bb28457c51f1dd071"
+				}
+			],
+			"vars": {
+				"ENV": "development"
+			}
+		}
+	}
+}

@@ -117,7 +117,7 @@ async function sendContent() {
   const data = await extractReadableContent();
   if (data && data.url) {
       data.domain = new URL(data.url).hostname;
-      data.title = data.title ? data.title : domain_name;
+      data.title = data.title ? data.title : data.domain;
 
       data.summary = data.summary.replace(/\s+/g, ' ').trim();
       chrome.runtime.sendMessage({ action: "save_page_data", data });

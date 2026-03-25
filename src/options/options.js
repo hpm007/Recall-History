@@ -1,7 +1,5 @@
 import { PRELOADED_DOMAINS } from "./config_options";
 
-console.log("🧾 Raw storage:", await chrome.storage.local.get(null));
-
 const input = document.getElementById("domainInput");
 const addBtn = document.getElementById("addBtn");
 const listEl = document.getElementById("list");

@@ -3,4 +3,6 @@ dl_content/
 node_modules/
 src/utils/
 src/debug/
-.env
+dist.crx
+dist.pem
+/**/*.zip

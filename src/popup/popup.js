@@ -3,9 +3,13 @@ import { createEmbedding } from "../summarizer/summarize.js";
 
 const query = document.getElementById("query");
 const resultsEl = document.getElementById("results");
+const API_BASE = "https://dev-api.recallhistory.net";
 
 let currentIndex = -1;
 let flatResults = [];   // [{page, score}]
+
+init();
+// document.getElementById("usageContainer").onclick = showUpgradeUI;
 
 query.addEventListener("keydown", (e) => {
   if (!flatResults) return;
@@ -29,6 +33,36 @@ query.addEventListener("keydown", async (e) => {
         await runSearch(query.value.trim());
     }
 })
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === "LIMIT_REACHED"){
+    showUpgradeUI(msg);
+  }
+});
+
+async function init(){
+  const { user_id: userId } = await chrome.storage.local.get("user_id");
+  // const api_base = await chrome.storage.local.get("api_base");
+  // const API_BASE = api_base || "https://api.recallhistory.net";
+
+  await syncUserPlan();
+  // applies only to 'free' users
+  const resp = await fetch(`${API_BASE}/usage`, {
+      method: "GET",
+      headers: { 
+        "Content-Type": "application/json",
+        "x-user-id": userId }
+  });
+  const data = await resp.json();
+  console.log(userId, data.usage);
+  updateUsageUI(data.usage, data.limit);
+  
+  const { limit_state } = await chrome.storage.local.get("limit_state");
+  if (limit_state?.reached) {
+    showUpgradeUI(limit_state);
+  }
+}
+
 
 function moveSelection(delta) {
   const max = flatResults.length - 1;
@@ -111,14 +145,13 @@ async function runSearch(query){
       relResults = rankedResults.filter(r => r.score >= topScore * topResultRelCut);
     }                                    
     
-    // const groupedPages = groupByDomain(relResults);     
-    // renderResults(groupedPages);
     flatResults = relResults.map(r => ({page: r.page, score: r.score}));
     currentIndex = -1;
     renderList(flatResults);
 }
 
 function similarityScore(a, b) {
+  if (!Array.isArray(a)) return 0;
   let dot = 0, na = 0, nb = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
@@ -127,20 +160,6 @@ function similarityScore(a, b) {
   }
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
-
-/* function groupByDomain(results) {
-  const groups = new Map();
-
-  for (const r of results) {
-    const domain = r.page.domain || new URL(r.page.url).hostname;
-    if (!groups.has(domain)) {
-      groups.set(domain, []);
-    }
-    groups.get(domain).push(r);
-  }
-
-  return groups;
-} */
 
 function highlight() {
   document.querySelectorAll(".result").forEach(el => {
@@ -181,7 +200,7 @@ async function fallbackKeywordSearch(query) {
             return {page: p, score}
         }).filter(o => o.score > 0).sort((a, b) => b.score - a.score);
 
-        renderResults(scored);
+        renderList(scored);
     });
 }
 
@@ -220,4 +239,58 @@ function escape(str = "") {
   return str.replace(/[&<>"']/g, s =>
     ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[s])
   );
+}
+// Important Note: Don't use domain grouping as ranking of individual results from different domains gets distorted
+
+function showUpgradeUI(data) {
+  const el = document.getElementById("upgrade");
+
+  el.style.display = "block";
+  document.getElementById("usageText").textContent =
+    `${data.usage} / ${data.limit} pages used`;
+
+  document.getElementById("upgradeBtn").onclick = showPricing;
+}
+
+async function showPricing() {
+  const { user_id: userId } = await chrome.storage.local.get("user_id");
+
+  const pricing_url = `https://recallhistory.net/pricing?user_id=${userId}`;
+  chrome.tabs.create({url: pricing_url})
+}
+
+function updateUsageUI(usage, limit) {
+  const textEl = document.getElementById("usageText");
+  const barEl = document.getElementById("usageBar");
+
+  console.log(`limit: ${limit}`);
+  if (!limit) return;
+  const percent = Math.min((usage / limit) * 100, 100);
+  textEl.textContent = `${usage} / ${limit} pages used`;
+  barEl.style.width = percent + "%";
+
+  if (percent > 80) {
+    barEl.style.background = "#e11d48"; // red
+  } else if (percent > 60) {
+    barEl.style.background = "#f59e0b"; // amber
+  } else {
+    barEl.style.background = "black";
+  }
+}
+
+async function syncUserPlan() {
+  const { user_id: userId } = await chrome.storage.local.get("user_id");
+
+  const resp = await fetch(`${API_BASE}/debug/user`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "x-user-id": userId,
+    }
+  });
+
+  const user = await resp.json();
+  if (user?.plan === "pro") {
+    chrome.storage.local.set({ user_plan: "pro" });
+  }
 }

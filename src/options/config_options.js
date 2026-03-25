@@ -99,7 +99,6 @@ export async function isExcludedUrl(url) {
     });
     
     let path = pathname.toLowerCase();
-    
     const hasExcPath = PATH_EXCLUDE_KEYWORDS.some(keyword => 
       path.includes(keyword)
     );
