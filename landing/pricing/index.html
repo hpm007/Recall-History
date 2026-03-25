@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pricing — Recall</title>
+
+<style>
+body { font-family: system-ui; padding: 40px; max-width: 900px; margin: auto; }
+
+.card {
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 16px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Pricing</h1>
+
+<div class="card">
+  <h2>Free</h2>
+  <p>✔ 50 pages/month</p>
+  <p>✔ Semantic search</p>
+  <p>✔ Local storage</p>
+</div>
+
+<div class="card">
+  <h2>Pro — $2/month</h2>
+  <p>✔ 1000 pages/month</p>
+  <p>✔ Faster processing</p>
+  <p>✔ Priority support</p>
+
+  <button onclick="startCheckout()">Upgrade</button>
+</div>
+
+<script>
+function startCheckout() {
+  const userId = new URLSearchParams(window.location.search).get("user_id");
+
+  window.location.href = `/checkout?user_id=${userId}`;
+}
+</script>
+
+</body>
+</html>

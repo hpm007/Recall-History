@@ -4,7 +4,9 @@
   "description": "Recall Browser History",
   "main": "content.js",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "deploy:dev": "npm run build && wrangler deploy --env dev",
+    "deploy:prod": "npm run build && wrangler deploy"
   },
   "keywords": [],
   "author": "",

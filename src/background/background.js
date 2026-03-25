@@ -6,6 +6,7 @@ import { isExcludedUrl } from "../options/config_options.js";
 const DWELL_THRESHOLD = 20000;
 const dwellTimers = new Map();
 const HTTP_URL_RE = /^https?:/i;
+console.log("Recall Extension version:", chrome.runtime.getManifest().version);
 
 function isHttpUrl(url) {
   return typeof url === "string" && HTTP_URL_RE.test(url);
@@ -93,7 +94,7 @@ async function handleIncomingPage(data) {
   let embedding = [];
 
   try {
-    embedding = await createEmbedding(data.summary);
+    embedding = await createEmbedding(`Title: ${data.title}\n\nSummary:\n${data.summary}`);
   }
   catch(err) {
     console.error("Embedding failed with error: ", err)
