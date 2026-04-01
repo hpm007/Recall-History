@@ -43,7 +43,7 @@ export async function summarizeWithLLM(text, opts = {}) {
     return;
   }
   else {
-    return extractTextFromResponse(data);
+    return extractTextFromResponse(data.data);
   }
 }
 

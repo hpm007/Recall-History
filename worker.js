@@ -96,10 +96,18 @@ export default {
     };
     usage = await getUsage(env, userId);
 
-    return new Response(JSON.stringify({embedding: data.data?.[0]?.embedding, usage, limit}), {
-      status: resp.status,
-      headers: { "Content-Type": "application/json" }
-    });
+    if (type === "summary"){
+      return new Response(JSON.stringify({data, usage, limit}), {
+        status: resp.status,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    else {
+      return new Response(JSON.stringify({embedding: data.data?.[0]?.embedding, usage, limit}), {
+        status: resp.status,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
   }
 };
 
