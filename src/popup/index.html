@@ -57,6 +57,38 @@
       overflow-y: auto;
       padding: 8px;
     }
+    .hand-button {
+    padding: 5px 15px;
+    font-size: 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer; /* Changes cursor to the standard hand */
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  /* The hidden hand emoji */
+  .hand-button::after {
+    content: '👉';
+    position: absolute;
+    right: -30px; /* Hide it off-screen to the right */
+    transition: all 0.3s ease;
+    opacity: 0;
+  }
+  /* Animation on Hover */
+  .hand-button:hover {
+    padding-right: 50px; /* Make room for the hand */
+    background-color: #0056b3;
+  }
+  .hand-button:hover::after {
+    right: 15px; /* Slide the hand in */
+    opacity: 1;
+  }
     </style>
   <script type= "module" src="popup.js"></script>
 </head>
@@ -77,8 +109,11 @@
   <div id="results"></div>
 
   <div id="upgrade" style="display:none; padding: 12px;">
-    <h3>Upgrade to continue</h3>
-    <button id="upgradeBtn">Upgrade</button>
+    <!-- <h3>Upgrade to continue</h3>
+    <button id="upgradeBtn">Upgrade</button> -->
+    <h3>Free tier limit exhausted</h3>
+    <h3>Premium tier coming soon 🚀</h3>
+    <button id="feedbackBtn" class="hand-button">Provide Feedback</button>
   </div>
 </body>
 </html>

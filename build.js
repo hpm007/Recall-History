@@ -33,7 +33,7 @@ for (const file of staticFiles) {
   copyFileSync(file, dest);
 }
 // copy static folders
-const staticFolders = ["src/popup", "src/options", "src/debug"];
+const staticFolders = ["src/popup", "src/options", "src/debug", "src/icons"];
 for (const folder of staticFolders){
   cpSync(folder, path.join(distDir, folder.split("/")[1]), 
   {recursive: true, filter: (src) => !src.endsWith(".js")});

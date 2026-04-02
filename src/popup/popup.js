@@ -45,7 +45,7 @@ async function init(){
   // const api_base = await chrome.storage.local.get("api_base");
   // const API_BASE = api_base || "https://api.recallhistory.net";
 
-  await syncUserPlan();
+  // await syncUserPlan();
   // applies only to 'free' users
   const resp = await fetch(`${API_BASE}/usage`, {
       method: "GET",
@@ -58,7 +58,7 @@ async function init(){
   updateUsageUI(data.usage, data.limit);
   
   const { limit_state } = await chrome.storage.local.get("limit_state");
-  if (limit_state?.reached) {
+  if (limit_state?.reached || data.usage >= data.limit) {
     showUpgradeUI(limit_state);
   }
 }
@@ -244,12 +244,15 @@ function escape(str = "") {
 
 function showUpgradeUI(data) {
   const el = document.getElementById("upgrade");
-
   el.style.display = "block";
+
   document.getElementById("usageText").textContent =
     `${data.usage} / ${data.limit} pages used`;
 
-  document.getElementById("upgradeBtn").onclick = showPricing;
+  document.getElementById("feedbackBtn").onclick = () => {
+    chrome.tabs.create({url: "https://docs.google.com/forms/d/e/1FAIpQLSd5LxtB0TAjZ-pUiwVMXMaGGIkV4OO40Tl8itL33jR-VRYzTQ/viewform?usp=publish-editor"});
+  };
+  // document.getElementById("upgradeBtn").onclick = showPricing;
 }
 
 async function showPricing() {

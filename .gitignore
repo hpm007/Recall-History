@@ -3,6 +3,7 @@ dl_content/
 node_modules/
 src/utils/
 src/debug/
+SupportingAssets/
 dist.crx
 dist.pem
 /**/*.zip
